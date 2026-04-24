@@ -1,0 +1,123 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: blockchain-postgres
+    environment:
+      POSTGRES_DB: blockchain_app
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - blockchain-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: blockchain-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - blockchain-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: blockchain-backend
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      NODE_ENV: production
+      FRONTEND_URL: http://localhost:3000
+      ETHEREUM_RPC_URL: https://eth.llamarpc.com
+      SEPOLIA_RPC_URL: https://rpc.sepolia.org
+      REDIS_URL: redis://redis:6379
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: blockchain_app
+      DB_USER: postgres
+      DB_PASSWORD: password
+      ETHERSCAN_API_KEY: ${ETHERSCAN_API_KEY:-}
+      ALCHEMY_API_KEY: ${ALCHEMY_API_KEY:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - blockchain-network
+    restart: unless-stopped
+    volumes:
+      - ./backend/logs:/app/logs
+
+  # Frontend Application
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: blockchain-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID: ${NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID:-}
+      NEXT_PUBLIC_ETHEREUM_RPC_URL: https://eth.llamarpc.com
+      NEXT_PUBLIC_SEPOLIA_RPC_URL: https://rpc.sepolia.org
+      NEXT_PUBLIC_NFT_CONTRACT_ADDRESS: ${NEXT_PUBLIC_NFT_CONTRACT_ADDRESS:-0x0000000000000000000000000000000000000000}
+      NEXT_PUBLIC_NETWORK_NAME: ${NEXT_PUBLIC_NETWORK_NAME:-localhost}
+      NEXT_PUBLIC_CONTRACT_NAME: BlockchainNFT
+      BACKEND_URL: http://backend:3001
+    depends_on:
+      - backend
+    networks:
+      - blockchain-network
+    restart: unless-stopped
+
+  # Hardhat Development Node (Optional)
+  hardhat-node:
+    image: node:18-alpine
+    container_name: blockchain-hardhat
+    working_dir: /app
+    command: >
+      sh -c "
+        npm install -g hardhat &&
+        cd contracts &&
+        npm install &&
+        npx hardhat node --hostname 0.0.0.0
+      "
+    ports:
+      - "8545:8545"
+    volumes:
+      - ./contracts:/app/contracts
+    networks:
+      - blockchain-network
+    profiles:
+      - dev
+
+networks:
+  blockchain-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
